@@ -1,0 +1,536 @@
+-- SQL Script
+
+-- Create the bookhaven database
+CREATE DATABASE bookhaven;
+
+
+
+-- Use bookhaven database
+USE bookhaven;
+
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+-- Create the Customer table
+CREATE TABLE Customer 
+(
+    custId 	integer (5),
+    firstName 	varchar (15) 	NOT NULL,
+    secondName 	varchar (15) 	NOT NULL,
+    addLine1 	varchar (30) 	NOT NULL,
+    addLine2 	varchar (30),
+    city 	varchar (10) 	NOT NULL,
+    province 	varchar (10) 	NOT NULL,
+    postalCode 	varchar (10) 	NOT NULL, 
+    dateOfBirth date ,
+    email 	varchar(100) 	UNIQUE NOT NULL,
+    CONSTRAINT 	c_custid_pk 	PRIMARY KEY (custId)
+);
+
+
+
+
+
+-- Create the delivery table
+CREATE TABLE delivery
+(
+    deliveryId		integer,
+    deliveryMethod	varchar (50)		NOT NULL,
+    address 		varchar (100)	        NOT NULL,
+    city		varchar (10)		NOT NULL,
+    province		varchar (10)		NOT NULL,
+    postalCode		varchar (10)		NOT NULL,
+    deliveryDate	date 			NOT NULL,
+    deliveryStatus	varchar (30),
+    trackingNo		integer (4),
+    CONSTRAINT 	d_did_pk 	PRIMARY KEY (deliveryId)
+);
+
+
+
+-- Create the Payment table
+CREATE TABLE Payment
+(
+    paymentId 		int(5),
+    amount		decimal(8,2)	NOT NULL,	
+    paymentType 	varchar(30)     NOT NULL,
+    CONSTRAINT  p_ic_pk		PRIMARY KEY (paymentId)
+);
+
+
+
+-- Create the Bank_Transfer_Payment table
+CREATE TABLE Bank_Transfer_Payment
+(
+    paymentId		int (5),
+    payMethod		varchar(30),
+    accountNo		varchar(20)	NOT NULL,
+    bankIdentifierCode	varchar(15),
+    CONSTRAINT	btp_pid_pk	PRIMARY KEY (paymentId),
+    CONSTRAINT  btp_pid_fk	FOREIGN KEY (paymentId)	REFERENCES payment(paymentId)
+);
+
+
+
+
+-- Create the Online_Payment table
+CREATE TABLE Online_Payment
+(
+    paymentId	int (5),
+    cardType	varchar(25),
+    cardNo	varchar(20)	NOT NULL,
+    nameOnCard	varchar(25)	NOT NULL,
+    expDate	varchar(8)	NOT NULL,
+    CONSTRAINT	op_payid_pk	PRIMARY KEY (paymentId),
+    CONSTRAINT  op_pid_fk	FOREIGN KEY (paymentId)	REFERENCES payment(paymentId)
+);
+
+
+
+
+
+
+-- Create the Item table
+CREATE TABLE Item
+(
+    itemCode 	int(5),
+    name		varchar (150)	NOT NULL,
+    price		decimal (8,2)	NOT NULL,
+    stockLevel		int (6),
+    reorderLevel 	int (6),
+    ratings		varchar (5),
+    itemType 		varchar(30) 	NOT NULL,
+    CONSTRAINT  i_ic_pk		PRIMARY KEY (itemCode)
+);
+
+
+
+-- Create the Book_Item table
+CREATE TABLE Book_Item
+(
+    itemCode		int (5),
+    ISBN		varchar (25)	UNIQUE NOT NULL,
+    title		varchar (150)	NOT NULL,
+    genre		varchar (50),
+    author		varchar (60)	NOT NULL,
+    publisher		varchar (30)	NOT NULL,
+    edition	     	varchar (10),
+    yearOfPublication 	varchar(6) 	NOT NULL,
+    CONSTRAINT  bi_ic_pk	PRIMARY KEY (itemCode),
+    CONSTRAINT  bi_ic_fk	FOREIGN KEY (itemCode)	REFERENCES item(itemCode)
+);
+
+
+
+
+-- Create the Stationery_Item table
+CREATE TABLE Stationery_Item
+(
+    itemCode		int(5),
+    brand		varchar(20),
+    model		varchar(20),
+    numberOfPieces 	int(5),
+    CONSTRAINT  si_ic_pk	PRIMARY KEY (itemCode),
+    CONSTRAINT  si_ic_fk	FOREIGN KEY (itemCode)	REFERENCES item(itemCode)
+);
+
+
+
+
+-- Create the Supplier table
+CREATE TABLE Supplier
+(
+    supId 	INT(5),
+    supType 	ENUM('Individual', 'Company') NOT NULL,
+    email		varchar(50)	UNIQUE NOT NULL,
+    repName		varchar(40) 	NOT NULL,
+    company		varchar(50),	
+    addLine1		varchar(20)	NOT NULL,
+    addLine2		varchar(20),
+    city		varchar(15)	NOT NULL,
+    productSupplied	varchar(30)	NOT NULL,
+    quantity 		int(8),
+    paymentDetails	varchar(30),
+    telNo		varchar(15) 	NOT NULL,
+    CONSTRAINT  s_sid_pk	PRIMARY KEY (supId)
+);
+
+
+
+
+
+
+-- Create the Customer_TelNo table
+CREATE TABLE Customer_TelNo
+(
+    custId	integer (5),
+    telNo	char(15),
+    telNo2	char(15),
+    CONSTRAINT 	ct_cid_telno_pk   PRIMARY KEY (custId, telNo),
+    CONSTRAINT 	ct_cid_fk 	  FOREIGN KEY (custId) REFERENCES customer(custId)
+);
+
+
+
+
+
+
+-- Create the Order table
+CREATE TABLE `Order`
+(
+    orderId		int(5),
+    orderDate		date	NOT NULL,
+    orderItems		varchar(100),
+    deliveryId		int(5),
+    CONSTRAINT	o_oid_pk	PRIMARY KEY (orderid),
+    CONSTRAINT  o_did_fk	FOREIGN KEY (deliveryId)    REFERENCES delivery(deliveryId)
+);
+
+
+
+-- Create the Ordered_Item table
+CREATE TABLE ordered_item
+(
+    orderId	int(5),	
+    itemCode	int(5),
+    quantity    int(8) NOT NULL,
+    CONSTRAINT	oi_oid_ic_pk	PRIMARY KEY (orderId, itemCode),
+    CONSTRAINT	oi_oid_fk	FOREIGN KEY (orderId) REFERENCES `order`(orderId),
+    CONSTRAINT  oi_ic_fk	FOREIGN KEY (itemCode)	REFERENCES item(itemCode) 
+);
+
+
+
+
+-- Create the Invoice table
+CREATE TABLE Invoice
+(
+    custId		int(5),
+    orderId		int(5),
+    paymentId		int(5),
+    transactionDate	date	NOT NULL,
+    CONSTRAINT	in_cid_oid_pid_td_pk	PRIMARY KEY (custId, orderId, paymentId, transactionDate),
+    CONSTRAINT	in_cid_fk	FOREIGN KEY (custId) 	REFERENCES customer(custId),
+    CONSTRAINT	in_oid_fk	FOREIGN KEY (orderId)	REFERENCES `order`(orderId),
+    CONSTRAINT  in_pid_fk	FOREIGN KEY (paymentId)	REFERENCES payment(paymentId)
+);
+
+
+
+
+
+-- Create the Suppling_Item table
+CREATE TABLE Suppling_Item
+(
+    supId	int(5),
+    itemCode	int(5),
+    CONSTRAINT	si_sid_ic_pk	PRIMARY KEY (supId, itemCode),
+    CONSTRAINT  si_sid_fk	FOREIGN KEY (supId)	REFERENCES supplier(supId),
+    CONSTRAINT  sui_ic_fk	FOREIGN KEY (itemCode)	REFERENCES item(itemCode)
+);
+
+
+
+
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- Inserting data into tables
+
+
+
+-- Populate the item table
+INSERT INTO item
+(itemCode, itemType, name, price, stockLevel, reorderLevel, ratings)
+VALUES
+	(101, 'Book', 'Harry Potter and the Sorcerer\'s Stone', 5000.00, 150, 30, '4.9'),
+	(102, 'Book', 'Diary of a Wimpy Kid', 2700.00, 200, 40, '4.5'),
+	(103, 'Book', 'The Fault in Our Stars', 4250.00, 120, 25, '4.8'),
+	(104, 'Book', 'The Martian', 7000.00, 100, 20, '4.7'),
+	(105, 'Book', 'Artemis', 5000.00, 80, 15, '4.6'),
+	(106, 'Book','Head First Python', 4500.00, 60, 12, NULL),
+	(107, 'Book','Fundamentals of Database Systems', 5500.00, 90, 18, '4.8'),
+	(108, 'Book','Database Management Systems', 6200.00, 80, 15, '4.6'),
+	(109, 'Book','MySQL for Dummies', 3200.00, 120, 25, '4.5'),
+	(110, 'Book','Introduction to Data Mining', 4800.00, 100, 20, '4.7'),
+        (1,'Stationery', 'Blue Ballpoint Pen', 10.00, 200, 50,'4.2'),
+	(2,'Stationery', 'Pencil Set', 60.00, 150, 30,'4.0'),
+	(3,'Stationery','Highlighter', 500.00, 100, 20, '4.5'),
+	(4,'Stationery', 'Notebook', 450.00, 80, 15,'4.8'),
+	(5,'Stationery','Eraser Pack', 500.00, 300, 50, '4.4'),
+	(6,'Stationery','Colored Pencil Set', 1500.00, 120, 25, '4.6'),
+	(200, 'Voucher', 'Rs 1000 Voucher', '1000.00', 20, 30, '4.7'),
+	(201, 'Voucher', 'Rs 5000 Voucher', '5000.00', 10, 15, '4.9');
+
+
+
+-- Populate the book_item table
+INSERT INTO 
+book_item (itemCode, ISBN, title, genre, author, publisher, edition, yearOfPublication)
+VALUES 
+	(101, '978-0-7475-3269-6', 'Harry Potter and the Sorcerer\'s Stone', 'Fantasy', 'J.K. Rowling', 'Bloomsbury', '1st', '1997'),
+	(102, '978-0-8109-8391-5', 'Diary of a Wimpy Kid', 'Children\'s', 'Jeff Kinney', 'Amulet Books', '1st', '2007'),
+	(103, '978-1-59474-606-2', 'The Fault in Our Stars', 'Romance', 'John Green', 'Dutton Books', '1st', '2012'),
+	(104, '978-0-553-41802-6', 'The Martian', 'Science Fiction', 'Andy Weir', 'Crown Publishers', '1st', '2011'),
+	(105, '978-0-553-44812-2', 'Artemis', 'Science Fiction', 'Andy Weir', 'Crown Publishing Group', '1st', '2017'),
+	(106, '978-1-4493-9159-2', 'Head First Python', 'Programming', 'Paul Barry', 'O\'Reilly Media', '2nd', '2022'),
+	(107, '978-0-13-397077-7', 'Fundamentals of Database Systems', 'Database Management', 'Ramez Elmasri', 'Pearson', '7th', '2015'),
+	(108, '978-0-13-480274-9', 'Database Management Systems', 'Database Management', 'Ramez Elmasri', 'Pearson', '3rd', '2019'),
+	(109, '978-1-118-98058-3', 'MySQL for Dummies', 'Database Management', 'John Paul Mueller', 'Springer', '8th', '2017'),
+	(110, '978-0-321-32136-7', 'Introduction to Data Mining', 'Database Management', 'Pang-Ning Tan', 'Springer', '2nd', '2006');
+	
+
+
+
+
+
+-- Populate the customer table
+INSERT INTO customer
+(custId, firstName, secondName, addLine1, addLine2, city, province, postalCode, dateOfBirth, email) 
+VALUES
+    (11, 'John', 'Perera', '89 Main Street', 'Kotahena', 'Colombo', 'Western', '12345', '1985-05-15', 'john.pe@gmail.com'),
+    (12, 'Jane', 'Rajapaksha', '456 Cinamon Avenue', NULL, 'Kandy', 'Central', '54301', '1998-08-22', 'jane.sm@icloud.com'),
+    (13, 'Ranil', 'Williams', '789 Jess Lane', 'Silva MW', 'Galle', 'Southern', '60890', '1978-12-10', 'ranil.williams@gmail.com'),
+    (14, 'Sunil', 'Johnson', '101 Lane', 'Church Road', 'Negombo', 'Western', '99765', '2002-03-28', 'sunil.johnson@yahoo.com'),
+    (15, 'Roy', 'Drax', '202 Maple Street', NULL, 'Jaffna', 'Northern', '56709', '2005-07-18', 'roydrax@gmail.com');
+
+
+
+-- Populate the customer_telno table
+INSERT INTO Customer_TelNo 
+(custId, telNo, telNo2) 
+VALUES
+    (11, '+94 77 1286567', '+94 76 9879843'),
+    (12, '+94 71 1812233', NULL),
+    (13, '+94 72 3534455', '+94 72 5555577'),
+    (14, '+94 76 9676543', NULL),
+    (15, '+94 70 8865432', '+94 71 2341278');
+
+
+
+-- Populate the delivery table
+INSERT INTO delivery
+(deliveryId, deliveryMethod, address, city, province, postalCode, deliveryDate, deliveryStatus, trackingNo)
+VALUES
+    (101, 'Standard', '123 Middle Street', 'Colombo', 'Western', '12345', '2023-10-02', 'Shipped', 987654),
+    (102, 'Express', '456 Lily Avenue', 'Kandy', 'Central', '54301', '2023-10-05', 'Delivered', 876543),
+    (103, 'Standard', '789 Pine Lane', 'Galle', 'Southern', '60890', '2023-10-14', 'In Transit', 765432),
+    (104, 'Express', '101 Lane', 'Negombo', 'Western', '99765', '2023-10-16', 'Delivered', 654321),
+    (105, 'Standard', '202 Maple Street', 'Jaffna', 'Northern', '56709', '2023-10-20', 'Pending', 543210),
+    (106, 'Express', '456 Lily Avenue', 'Kandy', 'Central', '54301', '2023-10-25', 'Delivered', 789658),
+    (107, 'Express', '456 Lily Avenue', 'Kandy', 'Central', '54301', '2023-10-28', 'Delivered', 874567),
+    (108, 'Standard', '789 Pine Lane', 'Galle', 'Southern','60890', '2023-11-02', 'Delivered', 456789),
+    (109, 'Express', '101 Lane', 'Negombo', 'Western', '99765', '2023-11-07', 'Delivered', 654301),
+    (110, 'Express', '101 Lane', 'Negombo', 'Western', '99765', '2023-11-11', 'Pending', 650321),
+    (111, 'Express', '101 Lane', 'Negombo', 'Western', '99765', '2023-11-11', 'Pending', 654901),
+    (112, 'Standard', '123 Middle Street', 'Colombo', 'Western', '12345', '2023-11-15', 'Pending', 987344);
+    
+
+
+-- Populate the stationery_item table
+INSERT INTO stationery_item 
+(itemCode, brand, model,numberOfPieces)
+VALUES
+    (1, 'BIC', 'Cristal Xtra Smooth', 1),
+    (2, 'Dixon', 'Ticonderoga', 12),
+    (3, 'Sharpie', 'Clear View', 3),
+    (4, 'Promate', 'Spiral Bound', 1),
+    (5,  'Paper Mate', 'Pink Pearl', 3),
+    (6,  'Atles', 'Pre-sharpened', 24);
+
+
+
+
+-- Populate the supplier table
+INSERT INTO supplier
+(supId, supType,repName ,company, email, addLine1, addLine2, city, productSupplied, quantity, paymentDetails, telNo)
+VALUES
+	(201,'Individual','Jo Cummins',NULL, 'jo.cumm@gmail.com', '15 Mid Street', NULL, 'Colombo', 'Books', 100, 'Bank Transfer','077 9520597'),
+	(202,'Individual','Ann Karunarathna',NULL, 'ann.karu@gmail.com', '456 Lake Lane', NULL, 'Kandy', 'Books', 80, 'Credit Card', '072 3456798'),
+	(203,'Individual','Kasun Perera',NULL, 'kasu.dd@icloud.com', '789 Apple Park', 'Mid lane', 'Galle', 'Stationery', 150, 'Cash On Delivery','078 8555843'),
+	(204,'Individual','Pat Cummins',NULL, 'patCumm@icloud.com', '101 Flower Road', 'Maawawa', 'Negombo', 'Stationery', 120, 'Bank Transfer','079 0967898'),
+	(205,'Individual','Roy Fernando',NULL, 'royfdo@gmail.com', '202 Silva Street', NULL, 'Jaffna', 'Books', 200, 'Credit Card','076 5784930'),
+        (50, 'Company','Mic Peter','Royal Publishers','RoyalBooks@gmail.com', '567 Mid Street', 'Sunil MW', 'Colombo', 'Books', 100, 'Bank Transfer','077 1234567'),
+	(51, 'Company','Stan Smith','Kandy Suppliers','kandysupp@gmail.com', '345 perera street', NULL, 'Kandy', 'Books', 80, 'Credit Card','071 1712333'),
+	(52, 'Company', 'Nimal Bimsara','Quick Supplies','gallesuppku@icloud.com', '276 Cactus Lane', 'Jo street', 'Galle', 'Stationery', 150, 'Cash On Delivery', '072 3384455'),
+	(53, 'Company','Megan Johnson','Stationery Paradise','supplierchane@hji.net', '101 Ala para', NULL, 'Negombo', 'Stationery', 120, 'Bank Transfer','076 9876543'),
+	(54, 'Company','Ryan Davis','Royal Books','royalsupp@gmail.com', '202 Maple Street', NULL, 'Kandana', 'Books', 200, 'Credit Card','070 8768432');
+
+
+
+
+
+-- Populate the suppling_item table
+INSERT INTO suppling_item
+(supId, itemCode)
+VALUES
+    (50, 101),
+    (51, 102),
+    (52, 1),
+    (53, 2),
+    (54, 103),
+    (54, 109),
+    (54, 110),
+    (50, 107),
+    (51, 108),
+    (52, 5),
+    (53, 6),
+    (201, 104),
+    (202, 105),
+    (203, 3),
+    (204, 4),
+    (205, 106),
+    (201, 200),
+    (205, 201);
+
+
+
+
+-- Populate the order table
+INSERT INTO `order`
+(orderId, orderDate, orderItems, deliveryId)
+VALUES
+    (300, '2022-09-15', 'Book & Stationery', 101),
+    (301, '2023-09-21', 'Stationery', 102),
+    (302, '2023-09-28', 'Book', 103),
+    (303, '2023-09-01', 'Book & Stationery', 104),
+    (304, '2023-09-05', 'Stationery', 105),
+    (305, '2023-09-30', 'Book', 106),
+    (306, '2023-09-08', 'Book & Stationery', 107),
+    (307, '2023-10-15', 'Book', 108),
+    (308, '2023-10-02', 'Book & Stationery', 109),
+    (309, '2023-10-15', 'Stationery', 110),
+    (310, '2023-10-28', 'Stationery', 111),
+    (311, '2023-10-15', 'Book', 112);
+
+
+
+
+-- Populate the ordered_item table
+INSERT INTO ordered_item
+(orderId, itemCode, quantity)
+VALUES
+	(300,107,1),	(300,4,2),
+    	(301,1,1),	(302,110,1),
+    	(303,103,1),	(303,3,2),
+	(304,6,1),	(305,106,1),
+    	(306,101,1),	(306,102,1),
+ 	(306,2,1),	(307,102,1),
+    	(308,103,1),	(308,4,1),
+    	(309,5,3),	(310,1,20),
+    	(311,107,2);
+
+
+
+
+-- Populate the payment table
+INSERT INTO payment
+(paymentId , paymentType, amount)
+VALUES
+    	(20, 'Bank', 6400.00),	
+	(21, 'Bank', 10.00),
+    	(22, 'Online', 4800.00),	
+	(23, 'Bank', 5250.00),
+    	(24, 'Online', 1500.00), 	
+	(25, 'Online', 4500.00),
+    	(26, 'Online', 7760.00),	
+	(27, 'Online', 2700.00),
+    	(28, 'Online', 4700.00), 	
+	(29, 'Bank', 1500.00),
+    	(30, 'Online', 200.00),	
+	(31, 'Bank', 11000.00);
+
+
+
+-- Populate the bank_transfer_payment table
+INSERT INTO bank_transfer_payment
+(paymentId, payMethod, accountNo, bankIdentifierCode)
+VALUES
+	(20, 'Cash Deposit', '123456789', 'BIC123ABC'),
+	(21, 'Bank Draft', '234567890', 'BIC234DEF'),
+	(23, 'Check', '456789012', 'BIC456JKL'),
+	(29, 'Cash Deposit', '012345678', 'BIC012BCD'),
+	(31, 'Check', '234567890', 'BIC234DEF');
+
+
+
+-- Populate the online_payment table
+INSERT INTO online_payment
+(paymentId, cardType, cardNo, nameOnCard, expDate)
+VALUES
+	(30, 'Visa', '4111111181111111', 'John Doily', '12/26'),
+	(22, 'Master', '5105105105105100', 'Anton Smith', '09/27'),
+	(24, 'AmerExp', '378282246310005', 'Bobby Lashly', '06/24'),
+	(25, 'Discover', '6011111111111117', 'Alice Perera', '03/25'),
+	(26, 'Visa', '6759649826438453', 'Chris Dabare', '11/26'),
+	(27, 'Visa', '3566171111911113', 'Ann Wilson', '08/27'),
+	(28, 'Master', '30569309025904', 'Pat Lee', '05/26');
+
+
+
+
+-- Populate the invoice table
+INSERT INTO invoice
+(custId, orderId, paymentId, transactionDate)
+VALUES
+    (11, 300, 20, '2022-09-15'),
+    (15, 301, 21, '2023-09-21'),
+    (13, 302, 22, '2023-09-28'),
+    (12, 303, 23, '2023-09-01'),
+    (14, 304, 24, '2023-09-05'),
+    (15, 305, 25, '2023-09-30'),
+    (15, 306, 26, '2023-09-08'),
+    (13, 307, 27, '2023-10-15'),
+    (12, 308, 29, '2023-10-02'),
+    (12, 309, 29, '2023-10-15'),
+    (12, 310, 30, '2023-10-28'),
+    (11, 311, 31, '2023-10-15');
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+-- Section 4 Data Manipulation with SQL Part (a)
+
+SELECT 	
+	ISBN, 
+	title  AS 'Book Title',  -- rename title as Book Title
+        genre  AS 'Category', 	 -- rename genre as Category
+        author AS 'Author'       -- rename author as Authour
+FROM 	book_item                -- select the book_item table
+WHERE 	
+	(genre = 'Database Management'
+	AND
+      	publisher IN ('Pearson','Springer'))    -- Choosing from the list
+      	OR
+      	(author = 'Ramez Elmasri');
+
+-- genre needs to be "Database Management" , publisher needs to be in the list, author needs to be Ramez Elmasri
+
+
+-- -------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+-- Section 4 Data Manipulation with SQL Part (b)
+
+
+SELECT
+	CONCAT(firstName,' ',secondName) AS 'Customer\'s Name',    -- Join first name and last name and rename it as customer's name  
+        email,
+        T.telNo AS 'Contact Number 1',
+        T.telNo2 AS 'Contact Number 2',
+        COUNT(I.orderId) AS 'Number of Orders'                     -- count how many orders placed
+
+FROM 	customer AS C 
+	INNER JOIN customer_telno AS T
+	ON C.custId = T.custId
+     	INNER JOIN invoice AS I
+     	ON C.custId = I.custId
+WHERE
+    transactionDate >= DATE_SUB(NOW(), INTERVAL 6 MONTH)    -- transaction date need to be within 6 months from today
+GROUP BY
+    C.custId                 -- group by customer ID
+HAVING
+    COUNT(I.orderId) > 2;    -- order count needs to be greater than 2
+
+
